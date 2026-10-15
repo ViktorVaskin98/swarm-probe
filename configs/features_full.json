@@ -1,0 +1,8 @@
+{
+  "model_id": "Qwen/Qwen2.5-0.5B-Instruct",
+  "dtype": "float16",
+  "completions_file": "qwen2.5-0.5b-instruct__sampled.jsonl",
+  "prefixes": [0, 16, 32, 64, -1],
+  "layers": [4, 8, 12, 16, 20, 24],
+  "batch_size": 8
+}

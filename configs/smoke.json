@@ -1,0 +1,11 @@
+{
+  "n_problems": 16,
+  "seed": 0,
+  "temperature": 0.7,
+  "top_p": 0.95,
+  "max_new_tokens": 512,
+  "models": [
+    {"model_id": "Qwen/Qwen2.5-0.5B-Instruct", "dtype": "float16", "n_samples": 4, "batch_problems": 8},
+    {"model_id": "Qwen/Qwen2.5-3B-Instruct", "dtype": "float16", "n_samples": 2, "batch_problems": 8}
+  ]
+}
