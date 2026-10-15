@@ -5,6 +5,7 @@ from swarm_probe.cost import generation_flops
 from swarm_probe.voting import (
     expected_vote_accuracy,
     majority_vote,
+    pass_at_k,
     vote_accuracy_curve,
     weighted_vote,
 )
@@ -49,6 +50,13 @@ def test_vote_curve_is_bracketed_by_ci() -> None:
     assert [p.k for p in points] == [1, 3]
     for point in points:
         assert point.ci_low <= point.accuracy <= point.ci_high
+
+
+def test_pass_at_k_matches_combinatorics() -> None:
+    assert pass_at_k(4, 1, 1) == pytest.approx(0.25)
+    assert pass_at_k(4, 1, 2) == pytest.approx(0.5)
+    assert pass_at_k(4, 0, 3) == 0.0
+    assert pass_at_k(4, 2, 3) == 1.0
 
 
 def test_generation_flops() -> None:

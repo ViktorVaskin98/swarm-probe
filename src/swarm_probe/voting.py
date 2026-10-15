@@ -1,3 +1,4 @@
+import math
 from collections import Counter
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
@@ -30,6 +31,14 @@ def weighted_vote(predictions: Sequence[str | None], weights: Sequence[float]) -
         return None
     best = max(scores.values())
     return next(p for p in predictions if p is not None and scores[p] == best)
+
+
+def pass_at_k(n: int, c: int, k: int) -> float:
+    if k > n:
+        raise ValueError(f"k={k} exceeds the {n} available samples")
+    if n - c < k:
+        return 1.0
+    return 1.0 - math.comb(n - c, k) / math.comb(n, k)
 
 
 def expected_vote_accuracy(

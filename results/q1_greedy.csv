@@ -1,0 +1,4 @@
+model,n_params,accuracy,ci_low,ci_high,flops_per_problem,mean_generated_tokens,truncated_share
+qwen2.5-0.5b-instruct,494032768,0.446,0.404,0.488,387991598545.408,303.34,0.04
+qwen2.5-1.5b-instruct,1543714304,0.688,0.64795,0.726,1208765349175.296,302.174,0.032
+qwen2.5-3b-instruct,3085938688,0.82,0.786,0.854,2472836733222.912,311.324,0.036

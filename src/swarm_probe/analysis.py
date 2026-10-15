@@ -8,7 +8,7 @@ import numpy as np
 import pandas as pd
 
 from swarm_probe.cost import generation_flops
-from swarm_probe.voting import bootstrap_mean_ci, vote_accuracy_curve
+from swarm_probe.voting import bootstrap_mean_ci, pass_at_k, vote_accuracy_curve
 
 
 @dataclass(frozen=True)
@@ -91,7 +91,11 @@ def swarm_table(
         n_available = min(len(v) for v in predictions.values())
         usable = [k for k in ks if k <= n_available]
         per_sample = mean_sample_flops(run.sampled, run.n_params)
+        hits = {qid: sum(p == gold[qid] for p in preds) for qid, preds in predictions.items()}
         for point in vote_accuracy_curve(predictions, gold, usable, n_draws=n_draws, seed=seed):
+            coverage = np.mean(
+                [pass_at_k(len(predictions[qid]), c, point.k) for qid, c in hits.items()]
+            )
             rows.append(
                 {
                     "model": run.slug,
@@ -100,6 +104,7 @@ def swarm_table(
                     "accuracy": point.accuracy,
                     "ci_low": point.ci_low,
                     "ci_high": point.ci_high,
+                    "coverage": float(coverage),
                     "flops_per_problem": point.k * per_sample,
                 }
             )

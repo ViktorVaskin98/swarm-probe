@@ -89,7 +89,7 @@ def plot_auc(table: pd.DataFrame, out_path: Path) -> None:
         yerr=[best["auc"] - best["ci_low"], best["ci_high"] - best["auc"]],
         marker="o",
         capsize=3,
-        label="best-layer probe",
+        label="probe, best layer (picked post hoc)",
         color="#2a6f97",
     )
     axes[1].errorbar(

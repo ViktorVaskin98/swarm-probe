@@ -1,0 +1,5 @@
+strategy,accuracy,delta_vs_majority,delta_ci_low,delta_ci_high
+majority vote,0.546,0.0,0.0,0.0
+logprob-weighted vote,0.558,0.012,-0.006,0.032
+probe-weighted vote (preregistered),0.582,0.036,0.012,0.06
+probe minus logprob weighting,,0.024,0.0,0.046
