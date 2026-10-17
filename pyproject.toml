@@ -3,6 +3,7 @@ name = "swarm-probe"
 version = "0.1.0"
 description = "Can a swarm of small LLMs match a larger one at equal compute, and can hidden states predict which answers will fail?"
 readme = "README.md"
+license = "MIT"
 requires-python = ">=3.10"
 dependencies = [
     "numpy>=1.26",

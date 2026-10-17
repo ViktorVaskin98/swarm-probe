@@ -1,35 +1,30 @@
-# PLAN — swarm-probe (до подачи в AIST 22.10.2026)
+# PLAN — swarm-probe
 
-## Вопросы
-- **Q1 (тема 2, рой малых LM).** Догоняет ли k сэмплов малой модели с голосованием большинством
-  (self-consistency) одну модель крупнее при равном бюджете FLOPs?
-- **Q2 (тема 12, прогноз сбоев).** Предсказывает ли линейный probe по скрытым состояниям, что ответ
-  будет неверным, — до генерации и по первым токенам ответа? Лучше ли он, чем logprob и длина?
-- **Q3 (stretch, связка).** Улучшает ли голосование, взвешенное уверенностью probe, рой по сравнению
-  с обычным большинством?
+## Questions
+- **Q1 (swarm of small models).** Does majority voting over *k* samples of a small model
+  (self-consistency) catch up with one larger model at an equal FLOPs budget?
+- **Q2 (failure prediction).** Does a linear probe on hidden states predict that an answer will be
+  wrong — before generation and from the first answer tokens? Is it better than mean log-probability
+  and answer length?
+- **Q3 (stretch, links Q1 and Q2).** Does voting weighted by the probe's confidence improve the swarm
+  over plain majority voting?
 
-## Сетап
-- GSM8K test, 500 задач (seed 0), ответ — число, проверка точным совпадением.
+## Setup
+- GSM8K test, 500 problems (seed 0); numeric answer, exact-match scoring.
 - Qwen2.5-Instruct 0.5B / 1.5B / 3B, HF `generate`, Kaggle T4, temperature 0.7, top-p 0.95.
-- Стоимость: `2 · N_params · (prompt + generated tokens)` на сэмпл.
-- Probe: логрегрессия по слоям × префиксам (0/16/32/64 токена), GroupKFold по задачам,
-  ROC-AUC с бутстреп-интервалами; бейзлайны — средний logprob, длина ответа.
+- Cost: `2 · N_params · (prompt + generated tokens)` per sample.
+- Probe: logistic regression over a layer × prefix grid (0 / 16 / 32 / 64 tokens), `GroupKFold` by
+  problem, ROC-AUC with bootstrap intervals; baselines — mean log-probability, answer length.
 
-## Зафиксировано до получения полных результатов (15.10, 21:00)
-- **Q2, основная метрика:** ROC-AUC probe по всей сетке слой × префикс, все ячейки в таблице.
-  «Лучший слой» на графике выбран апостериори и подписан так.
-- **Q3, основная ячейка:** префикс `full` (последний токен ответа), слой 16, логрегрессия C = 0.1,
-  OOF-скоры по GroupKFold(5). Остальные ячейки — только как exploratory.
-- **Q1:** сравнение по FLOPs при равном бюджете; основной кандидат — 0.5B × k против 1.5B и 3B greedy.
+## Fixed before the full results (2026-10-15, 21:00 MSK)
+- **Q2, primary metric:** probe ROC-AUC over the whole layer × prefix grid, every cell reported.
+  The "best layer" curve in the figure is picked post hoc and labelled as such.
+- **Q3, primary cell:** prefix `full` (last answer token), layer 16, logistic regression C = 0.1,
+  out-of-fold scores from `GroupKFold(5)`. All other cells are exploratory only.
+- **Q1:** comparison at equal FLOPs; the main contrast is 0.5B × *k* against 1.5B and 3B greedy.
 
-## Расписание
-| День | Что | Статус |
-|---|---|---|
-| Чт 15.10 | Каркас репо, smoke на Kaggle, запуск полной генерации | готово |
-| Пт 16.10 | Кривые Q1, извлечение скрытых состояний, probe Q2, Q3, README | готово (ночью) |
-| Сб 17.10 | Отчёт PDF на 2 страницы (опционально), репо публичный | |
-| Вс–Пн 18–19.10 | 4 мотивационных письма (темы 2, 13, 12, 8), строка в резюме | |
-| Вт–Чт 20–22.10 | Буфер, вычитка, подача форм до обеда 22.10 | |
-
-## Порядок урезания при нехватке времени
-Q3 → модель 3B → префиксы 32/64. Письма не режем.
+## Outcome (2026-10-16)
+Q1 — the swarm loses at equal compute, but its pass@k matches the larger model: the bottleneck is
+aggregation. Q2 — the probe beats log-probability, but before the answer is complete it detects
+hard problems rather than failing samples. Q3 — the preregistered cell gives +3.6 pp over majority
+voting (95% CI +1.2…+6.0). Details in the [README](README.md).
