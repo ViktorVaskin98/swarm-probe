@@ -10,6 +10,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
+from swarm_probe.plots import apply_style
 from swarm_probe.probe import ProbeFeatures, evaluate_scores, probe_scores_full, vote_comparison
 
 FULL = -1
@@ -70,25 +71,30 @@ def plot_auc(table: pd.DataFrame, out_path: Path) -> None:
     best = best.assign(x=best["prefix"].map(position)).sort_values("x")
     logprob = table[table["feature"] == "mean logprob"]
     logprob = logprob.assign(x=logprob["prefix"].map(position)).sort_values("x")
-    fig, axes = plt.subplots(1, 2, figsize=(10, 4), dpi=160)
+    apply_style()
+    fig, axes = plt.subplots(1, 2, figsize=(14, 5.2), gridspec_kw={"width_ratios": [1.1, 1]})
     pivot = probes.assign(layer=probes["feature"].str.removeprefix("probe L").astype(int))
     pivot = pivot.pivot(index="layer", columns="prefix", values="auc")
     pivot = pivot[sorted(pivot.columns, key=prefix_order)]
     image = axes[0].imshow(pivot.to_numpy(), cmap="viridis", aspect="auto", origin="lower")
     axes[0].set_xticks(range(len(pivot.columns)), [prefix_label(c) for c in pivot.columns])
     axes[0].set_yticks(range(len(pivot.index)), [str(i) for i in pivot.index])
+    midpoint = (np.nanmin(pivot.to_numpy()) + np.nanmax(pivot.to_numpy())) / 2
     for (i, j), value in np.ndenumerate(pivot.to_numpy()):
-        axes[0].text(j, i, f"{value:.2f}", ha="center", va="center", fontsize=7, color="white")
+        color = "black" if value > midpoint else "white"
+        axes[0].text(j, i, f"{value:.2f}", ha="center", va="center", fontsize=10, color=color)
     axes[0].set_xlabel("Answer tokens seen")
     axes[0].set_ylabel("Layer")
-    axes[0].set_title("Probe ROC-AUC (out-of-fold, grouped by problem)")
+    axes[0].set_title("Probe ROC-AUC by layer and answer prefix")
     fig.colorbar(image, ax=axes[0], fraction=0.046)
     axes[1].errorbar(
         best["x"],
         best["auc"],
         yerr=[best["auc"] - best["ci_low"], best["ci_high"] - best["auc"]],
         marker="o",
-        capsize=3,
+        markersize=7,
+        linewidth=2,
+        capsize=4,
         label="probe, best layer (picked post hoc)",
         color="#2a6f97",
     )
@@ -97,7 +103,9 @@ def plot_auc(table: pd.DataFrame, out_path: Path) -> None:
         logprob["auc"],
         yerr=[logprob["auc"] - logprob["ci_low"], logprob["ci_high"] - logprob["auc"]],
         marker="s",
-        capsize=3,
+        markersize=7,
+        linewidth=2,
+        capsize=4,
         label="mean token logprob",
         color="#e07a5f",
     )
@@ -106,7 +114,7 @@ def plot_auc(table: pd.DataFrame, out_path: Path) -> None:
     axes[1].set_xlabel("Answer tokens seen")
     axes[1].set_ylabel("ROC-AUC, failure prediction")
     axes[1].set_title("How early can we predict a wrong answer?")
-    axes[1].legend(frameon=False, fontsize=8)
+    axes[1].legend(frameon=False, loc="upper left")
     axes[1].spines[["top", "right"]].set_visible(False)
     fig.tight_layout()
     out_path.parent.mkdir(parents=True, exist_ok=True)
@@ -121,7 +129,12 @@ def main() -> None:
     parser.add_argument("--completions", default="qwen2.5-0.5b-instruct__sampled.jsonl")
     parser.add_argument("--results", type=Path, default=Path("results"))
     parser.add_argument("--figures", type=Path, default=Path("figures"))
+    parser.add_argument("--plot-only", action="store_true")
     args = parser.parse_args()
+
+    if args.plot_only:
+        plot_auc(pd.read_csv(args.results / "q2_probe_auc.csv"), args.figures / "q2_probe_auc.png")
+        return
 
     features = ProbeFeatures.load(args.features)
     table, scores_by_cell = auc_grid(features)
